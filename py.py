@@ -11,6 +11,7 @@ title_part = re.compile(
     r'(?<={"cid").*?(?=vid":"","weblink":"","dimension":{)')
 anime_tile_part = re.compile(r'(?<=","vid":"","longTitle":).*?(?=,"badge":)')
 
+
 def get_tile(str1):
     resp = requests.get(
         url=f'https://www.bilibili.com/video/av' + str1 + '?p=' + '',
@@ -33,7 +34,7 @@ def get_tile(str1):
 def get_anime_tile(str1):
     str1 = str1.replace('s_', 'ss')
     resp = requests.get(
-        url=f'https://www.bilibili.com/bangumi/play/' + str1, 
+        url=f'https://www.bilibili.com/bangumi/play/' + str1,
         # 地址
         headers={
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel) '
@@ -55,9 +56,9 @@ def dir_rename():
     list1 = os.listdir(path)
     for i in list1:
         if 's_' in i:
-            os.rename(path+'/'+i, path+'/'+get_anime_tile(i))
+            os.rename(path + '/' + i, path + '/' + get_anime_tile(i))
         else:
-            os.rename(path+'/'+i, path+'/'+get_tile(i))
+            os.rename(path + '/' + i, path + '/' + get_tile(i))
 
 
 def find_file_and_trans():
@@ -80,25 +81,32 @@ def transcoding(str1):
                         'ffmpeg -hwaccel cuvid -c:v h264_cuvid -i ' + str1 + ' -c:v h264_nvenc -y ./download/' + s + '/' + s1 + '.mp4')
 
 
-def unite_video(str1):
+def unite_video(audio):
     for s in os.listdir('./download'):
-        if s in str1:
+        if s in audio:
             for s1 in os.listdir('./download/' + s):
-                if s1 in str1:
-                    os.system(
-                        'ffmpeg -hwaccel cuvid -c:v h264_cuvid -i ' + str1 + ' -c:v h264_nvenc -y ./download/' + s + '/' + s1 + '.mp4')
+                if s1 in audio:
+                    video = audio.replace('audio.m4s', 'video.m4s')
+                    zx = 'ffmpeg -hwaccel cuvid -c:v h264_cuvid -i ' + audio + ' -i ' + \
+                        video + ' -c:v h264_nvenc  -y ./download/' + s + '/' + s1 + '.mp4'
+                    os.system(zx)
 
 
 def rm_dir():
     path = './download'
+    m = False
     for file in os.listdir(path):
         for in_file in os.listdir(path + '/' + file):
-            print(in_file)
-            if bool(1 - ('.mp4' in in_file)):
-                if os.path.isdir(path + '/' + file + '/' + in_file):
-                    shutil.rmtree(path + '/' + file + '/' + in_file)
-                else:
-                    os.remove(path + '/' + file + '/' + in_file)
+            if '.mp4' in in_file:
+                m=True
+    if m:
+        for file in os.listdir(path):
+            for in_file in os.listdir(path + '/' + file):
+                if bool(1 - ('.mp4' in in_file)):
+                    if os.path.isdir(path + '/' + file + '/' + in_file):
+                        shutil.rmtree(path + '/' + file + '/' + in_file)
+                    else:
+                        os.remove(path + '/' + file + '/' + in_file)
 
 
 def is_number(s):
